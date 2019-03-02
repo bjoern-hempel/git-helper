@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+
+# Declare some branches in which to merge.
+declare -A BRANCHES=([m]=master [p]=preview)
+
+# Declare some selection elements for the questions.
+declare -A YES_NO=([y]=yes [n]=no)
+
+# Get root directory.
+ROOT_DIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
+
+# Define some required environment variables.
+feature_branch_prefix="feature-"
+
+# Some text modules.
+TEXT_TARGET_BRANCH_TITLE="The following branches are available for selection:"
+TEXT_TARGET_BRANCH_QUESTION="In which branch listed above would you like to merge?"
+TEXT_TARGET_BRANCH_DOES_NOT_EXIST="The target branch \"%s\" does not exist."
+TEXT_TARGET_BRANCH_CHECKOUT="Checkout the target branch \"%s\"."
+TEXT_TARGET_BRANCH_PULL="Pull the target branch \"%s\"."
+TEXT_TARGET_BRANCH_HINTS="Your merge is currently only in your local instance. Check this one:\n\
+\n\
+a) If necessary, resolve conflicts (after $ git add) and commit again ($ git commit).\n\
+b) When you're done, push your state ($ git push).\n\
+c) Check your repository to see if you are happy with your commit.\n\
+d) Correct any inconveniences if needed.\n\
+d) Push again.\n\
+e) Then you are done."
+TEXT_SOURCE_BRANCH_TITLE="You want to merge the source branch \"%s\". Is that correct?"
+TEXT_SOURCE_BRANCH_QUESTION="Answer:"
+TEXT_SOURCE_BRANCH_DOES_NOT_EXIST="The given source branch \"%s\" does not exist."
+TEXT_SOURCE_BRANCH_CHECKOUT="Checkout the source branch \"%s\"."
+TEXT_SOURCE_BRANCH_PULL="Pull the source branch \"%s\"."
+TEXT_SOURCE_BRANCH_MERGE="Merge the source branch \"%s\" into the target branch \"%s\"."
+TEXT_SUMMARIZE_TITLE="Let me summarize. You want to merge \"%s\" into \"%s\". Is that correct?"
+TEXT_SUMMARIZE_QUESTION="Answer:"
+TEXT_CANCEL_NO="You chose no. Abort here."
+TEXT_CANCEL="Cancel.."
+TEXT_DEBUG_MODE="I'm in debug mode. Ignore command:\n\033[34m$ %s\033[0m"
+
+
+# Include some helper.
+source "$ROOT_DIR/helper/functions"
+
+# Check if there is no parameter given.
+if [[ "$#" -lt 1 ]]; then
+  echo "No feature branch number given. Usage ./$0 [number-of-feature]" && exit 1
+fi
+
+# Define some help variables.
+process_number=0
+format_process_number="┌───────────┐\n│ \033[1m\e[3mStep %02d.)\033[0m │\n└───────────┘"
+format_process_extra="\n"
+debug_mode=false
+
+# Get the source branch.
+source_branch="$feature_branch_prefix$1"
+
+# Check if the given branch even exists.
+output=$(git show-branch remotes/origin/$source_branch 2>/dev/null)
+last_status=$?
+
+# We've established that the branch doesn't exist.
+if [[ ${last_status} -gt 0 ]]; then
+    echo "$(printf "$TEXT_SOURCE_BRANCH_DOES_NOT_EXIST" "$source_branch")" && exit 1
+fi
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+# Question whether the source branch is all right.
+answer=$(select_input YES_NO "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_SOURCE_BRANCH_TITLE" "$source_branch")" "$TEXT_SOURCE_BRANCH_QUESTION" true true) && echo && echo
+
+# Cancel if no is selected.
+case "$answer" in
+    no) echo "$TEXT_CANCEL_NO" && exit 1;;
+    ESCAPE) echo "$TEXT_CANCEL" && exit 1;;
+esac
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+# Get the target branch.
+target_branch=$(select_input BRANCHES "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_TARGET_BRANCH_TITLE")" "$TEXT_TARGET_BRANCH_QUESTION") && echo && echo
+
+# Cancel if escape was pressed.
+case "$target_branch" in
+    ESCAPE) echo "$TEXT_CANCEL" && exit 1;;
+esac
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+# Question whether the source branch is all right.
+answer=$(select_input YES_NO "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_SUMMARIZE_TITLE" "$source_branch" "$target_branch")" "$TEXT_SUMMARIZE_QUESTION" true true) && echo && echo
+
+# Cancel if no is selected.
+case "$answer" in
+    no) echo "$TEXT_CANCEL_NO" && exit 1;;
+    ESCAPE) echo "$TEXT_CANCEL" && exit 1;;
+esac
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+# Checkout this feature branch.
+echo "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_SOURCE_BRANCH_CHECKOUT" "$source_branch")"
+command="git checkout \"$source_branch\""
+execute_command "$command" ${debug_mode} "$TEXT_DEBUG_MODE"
+echo
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+# Pull the branch.
+echo "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_SOURCE_BRANCH_PULL" "$source_branch")"
+command="git pull"
+execute_command "$command" ${debug_mode} "$TEXT_DEBUG_MODE"
+echo
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+# checkout the preview branch
+echo "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_TARGET_BRANCH_CHECKOUT" "$target_branch")"
+command="git checkout \"$target_branch\""
+execute_command "$command" ${debug_mode} "$TEXT_DEBUG_MODE"
+echo
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+# Pull the branch.
+echo "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_TARGET_BRANCH_PULL" "$target_branch")"
+command="git pull"
+execute_command "$command" ${debug_mode} "$TEXT_DEBUG_MODE"
+echo
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+# Merge the given source branch.
+echo "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_SOURCE_BRANCH_MERGE" "$source_branch" "$target_branch")"
+command="git merge \"$source_branch\""
+execute_command "$command" ${debug_mode} "$TEXT_DEBUG_MODE"
+echo
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+# Print some hints.
+echo -e "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_TARGET_BRANCH_HINTS")"
+echo

@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+# Ask the user for the given possibilities and return the selection.
+#
+# Current state: Only one single character can be entered.
+#
+# Todo: Enables the input of a character string.
+#
+# Usage:
+# ------
+# declare -A YES_NO=([y]=yes [n]=no)
+# title="Are you sure you want to do this?"
+# question="Answer: "
+# answer=$(select_input YES_NO "$title" "$question" true true)
+#
+# case "$answer" in
+#     no) echo "No choosen." && exit 1;;
+#     ESCAPE) echo "Cancel.." && exit 1;;
+# esac
+select_input() {
+    # Define some command templates.
+    local arr_keys="\${!$1[@]}"
+    local arr_val="\${$1[\"\$o\"]}"
+    local arr_exist="\${$1[\"\$reply\"]+_}"
+    local arr_val_reply="\${$1[\"\$reply\"]}"
+
+    # Parse the input parameters.
+    local title="$2"
+    local question="$3"
+    local short_output=${4:-false}
+    local reverse=${4:-false}
+
+    while : ; do
+        if ${short_output}; then
+            local hint=""
+            for o in $(eval echo $arr_keys); do
+                if ${reverse}; then
+                    [[ "$hint" == "" ]] || hint="/$hint"
+                    hint="$o$hint"
+                else
+                    [[ "$hint" == "" ]] || hint="$hint/"
+                    hint+="$o"
+                fi
+            done >&2
+
+            read -n1 -p "$title ($hint) " reply
+        else
+            echo "$title" >&2 && echo >&2
+
+            for o in $(eval echo $arr_keys); do
+                printf "%s) %s\n" "$o" "$(eval echo $arr_val)"
+            done >&2
+            echo >&2
+
+            read -n1 -p "$question " reply
+        fi
+
+        case $reply in
+            $'\e') echo -n "ESCAPE" && return
+        esac
+
+        # check if select exists
+        if [[ $(eval echo $arr_exist) ]]; then
+            echo -n "$(eval echo $arr_val_reply)" && return
+        else
+            echo >&2 && echo >&2 && echo "Invalid input. Try again." >&2 && echo >&2
+        fi
+    done
+}
+
+# Executes the specified command if the debug mode is not set.
+# Otherwise, only print the command.
+#
+# Usage:
+# ------
+# debug_mode=true
+# hint="I'm in debug mode. Ignore command: %s"
+# command="echo \"Das ist ein Text\""
+# execute_command "$command" ${debug_mode} "$hint"
+execute_command() {
+    local command=${1}
+    local debug_mode=${2:-false}
+    local hint=${3:-}
+
+    if ${debug_mode}; then
+        [[ "$hint" == "" ]] && return
+        printf "$hint" "$command" && echo && return
+    fi
+
+    eval "${command}"
+}
