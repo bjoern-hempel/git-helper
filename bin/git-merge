@@ -31,64 +31,44 @@
 # @copyright Written by Björn Hempel <bjoern@hempel.li>.
 # ------------
 
+# Get root directory.
+ROOT_DIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
+
+
+# Include some helper.
+source "$ROOT_DIR/helper/functions"
+source "$ROOT_DIR/i18n/en_GB"
+
+
+# The feature branch prefix
+feature_branch_prefix="feature-"
+
+# Stores the current process number.
+process_number=0
+
+# The process output template.
+format_process_number="┌───────────┐\n│ \033[1m\e[3mStep %02d.)\033[0m │\n└───────────┘"
+
+# Add an extra text after the process output.
+format_process_extra="\n"
+
+# Sets the debug mode if needed.
+debug_mode=false
+
+# Get the source branch.
+source_branch="$feature_branch_prefix$1"
+
 # Declare some branches in which to merge.
 declare -A BRANCHES=([m]=master [p]=preview)
 
 # Declare some selection elements for the questions.
 declare -A YES_NO=([y]=yes [n]=no)
 
-# Get root directory.
-ROOT_DIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
-
-# Define some required environment variables.
-feature_branch_prefix="feature-"
-
-# Some text modules.
-TEXT_TARGET_BRANCH_TITLE="The following branches are available for selection:"
-TEXT_TARGET_BRANCH_QUESTION="In which branch listed above would you like to merge?"
-TEXT_TARGET_BRANCH_DOES_NOT_EXIST="The target branch \"%s\" does not exist."
-TEXT_TARGET_BRANCH_CHECKOUT="Checkout the target branch \"%s\"."
-TEXT_TARGET_BRANCH_PULL="Pull the target branch \"%s\"."
-TEXT_TARGET_BRANCH_HINTS="Your merge is currently only in your local instance. Check this one:\n\
-\n\
-a) If necessary, resolve conflicts (after $ git add) and commit again ($ git commit).\n\
-b) When you're done, push your state ($ git push).\n\
-c) Check your repository to see if you are happy with your commit.\n\
-d) Correct any inconveniences if needed.\n\
-d) Push again.\n\
-e) Then you are done."
-TEXT_SOURCE_BRANCH_TITLE="You want to merge the source branch \"%s\". Is that correct?"
-TEXT_SOURCE_BRANCH_QUESTION="Answer:"
-TEXT_SOURCE_BRANCH_DOES_NOT_EXIST="The given source branch \"%s\" does not exist."
-TEXT_SOURCE_BRANCH_EXISTS="The given source branch \"%s\" exists."
-TEXT_SOURCE_BRANCH_CHECKOUT="Checkout the source branch \"%s\"."
-TEXT_SOURCE_BRANCH_PULL="Pull the source branch \"%s\"."
-TEXT_SOURCE_BRANCH_MERGE="Merge the source branch \"%s\" into the target branch \"%s\"."
-TEXT_SUMMARIZE_TITLE="Let me summarize. You want to merge \"%s\" into \"%s\". Is that correct?"
-TEXT_SUMMARIZE_QUESTION="Answer:"
-TEXT_CANCEL_NO="You chose no. Abort here."
-TEXT_CANCEL="Cancel.."
-TEXT_DEBUG_MODE="I'm in debug mode. Ignore command:\n\033[34m$ %s\033[0m"
-TEXT_GIT_WORKING_STATE_NOT_CLEAN="There are processed files in the current directory. It is better if the working \
-state is clean to continue. Do you want to continue?"
-TEXT_GIT_WORKING_STATE_CLEAN="The working state is clean."
-
-# Include some helper.
-source "$ROOT_DIR/helper/functions"
 
 # Check if there is no parameter given.
 if [[ "$#" -lt 1 ]]; then
     echo "No feature branch number given. Usage ./$0 [number-of-feature]" && exit 1
 fi
-
-# Define some help variables.
-process_number=0
-format_process_number="┌───────────┐\n│ \033[1m\e[3mStep %02d.)\033[0m │\n└───────────┘"
-format_process_extra="\n"
-debug_mode=false
-
-# Get the source branch.
-source_branch="$feature_branch_prefix$1"
 
 
 # Entering next process.
