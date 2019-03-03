@@ -28,3 +28,4 @@ TEXT_DEBUG_MODE="I'm in debug mode. Ignore command:\n\033[34m$ %s\033[0m"
 TEXT_GIT_WORKING_STATE_NOT_CLEAN="There are processed files in the current directory. It is better if the working \
 state is clean to continue. Do you want to continue?"
 TEXT_GIT_WORKING_STATE_CLEAN="The working state is clean."
+TEXT_NO_FEATURE_BRANCH_NUMBER_GIVEN="No feature branch number given. Usage %s [number-of-feature]"

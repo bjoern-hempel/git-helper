@@ -34,7 +34,6 @@
 # Get root directory.
 ROOT_DIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
 
-
 # Include some helper.
 source "$ROOT_DIR/helper/functions"
 source "$ROOT_DIR/i18n/en_GB"
@@ -67,7 +66,7 @@ declare -A YES_NO=([y]=yes [n]=no)
 
 # Check if there is no parameter given.
 if [[ "$#" -lt 1 ]]; then
-    echo "No feature branch number given. Usage ./$0 [number-of-feature]" && exit 1
+    printf "$TEXT_NO_FEATURE_BRANCH_NUMBER_GIVEN" "$0" && echo && exit 1
 fi
 
 
