@@ -4,11 +4,15 @@ A framework for managing feature branches of git repositories.
 
 ## Create a new feature branch
 
-TODO..
+```bash
+user$ git-create-feature 12345
+```
 
 ## Merge a feature branch into the master branch (or another main branch)
 
-TODO..
+```bash
+user$ git-merge 12345
+```
 
 ## A. Authors
 
