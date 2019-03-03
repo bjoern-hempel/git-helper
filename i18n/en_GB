@@ -3,7 +3,9 @@
 TEXT_TARGET_BRANCH_TITLE="The following branches are available for selection:"
 TEXT_TARGET_BRANCH_QUESTION="In which branch listed above would you like to merge?"
 TEXT_TARGET_BRANCH_DOES_NOT_EXIST="The target branch \"%s\" does not exist."
+TEXT_TARGET_BRANCH_DOES_EXIST="The target branch \"%s\" does already exist."
 TEXT_TARGET_BRANCH_CHECKOUT="Checkout the target branch \"%s\"."
+TEXT_TARGET_BRANCH_CREATE="Create the target branch \"%s\"."
 TEXT_TARGET_BRANCH_PULL="Pull the target branch \"%s\"."
 TEXT_TARGET_BRANCH_HINTS="Your merge is currently only in your local instance. Check this one:\n\
 \n\
@@ -20,6 +22,7 @@ TEXT_SOURCE_BRANCH_EXISTS="The given source branch \"%s\" exists."
 TEXT_SOURCE_BRANCH_CHECKOUT="Checkout the source branch \"%s\"."
 TEXT_SOURCE_BRANCH_PULL="Pull the source branch \"%s\"."
 TEXT_SOURCE_BRANCH_MERGE="Merge the source branch \"%s\" into the target branch \"%s\"."
+TEXT_BRANCHES_LIST="List all branches."
 TEXT_SUMMARIZE_TITLE="Let me summarize. You want to merge \"%s\" into \"%s\". Is that correct?"
 TEXT_SUMMARIZE_QUESTION="Answer:"
 TEXT_CANCEL_NO="You chose no. Abort here."

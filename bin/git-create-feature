@@ -1,0 +1,158 @@
+#!/usr/bin/env bash
+
+# ------------
+# This script helps you to merge existing feature branches in other branches.
+#
+# @author    Björn Hempel <bjoern@hempel.li>
+# @version   1.0 (2019-03-03)
+#
+# @copyright MIT License
+# @copyright
+# @copyright Copyright (c) 2019 Björn Hempel
+# @copyright
+# @copyright Permission is hereby granted, free of charge, to any person obtaining a copy
+# @copyright of this software and associated documentation files (the "Software"), to deal
+# @copyright in the Software without restriction, including without limitation the rights
+# @copyright to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# @copyright copies of the Software, and to permit persons to whom the Software is
+# @copyright furnished to do so, subject to the following conditions:
+# @copyright
+# @copyright The above copyright notice and this permission notice shall be included in all
+# @copyright copies or substantial portions of the Software.
+# @copyright
+# @copyright THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# @copyright IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# @copyright FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# @copyright AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# @copyright LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# @copyright OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# @copyright SOFTWARE.
+# @copyright
+# @copyright Written by Björn Hempel <bjoern@hempel.li>.
+# ------------
+
+# Get root directory.
+ROOT_DIR="$(dirname "$(dirname "$(readlink -f "$0")")")"
+
+# Include some helper.
+source "$ROOT_DIR/helper/functions"
+source "$ROOT_DIR/i18n/en_GB"
+
+
+# The feature branch prefix
+feature_branch_prefix="feature-"
+
+# Stores the current process number.
+process_number=0
+
+# The process output template.
+format_process_number="┌───────────┐\n│ \033[1m\e[3mStep %02d.)\033[0m │\n└───────────┘"
+
+# Add an extra text after the process output.
+format_process_extra="\n"
+
+# Sets the debug mode if needed.
+debug_mode=false
+
+# Get the source branch.
+source_branch="master"
+
+# Declare some branches in which to merge.
+declare -A BRANCHES=([m]=master [p]=preview)
+
+# Declare some selection elements for the questions.
+declare -A YES_NO=([y]=yes [n]=no)
+
+
+# Check if there is no parameter given.
+if [[ "$#" -lt 1 ]]; then
+    printf "$TEXT_NO_FEATURE_BRANCH_NUMBER_GIVEN" "$0" && echo && exit 1
+fi
+
+
+# Get the target branch.
+target_branch="$feature_branch_prefix$1"
+
+
+# Entering next process.
+# ----------------------
+
+# Check, if we do have a clean working state.
+if changed_files; then
+    let process_number++
+
+    answer=$(select_input YES_NO "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_GIT_WORKING_STATE_NOT_CLEAN")" "" true true) && echo && echo
+
+    # Cancel if no is selected.
+    case "$answer" in
+        no) echo "$TEXT_CANCEL_NO" && exit 1;;
+        ESCAPE) echo "$TEXT_CANCEL" && exit 1;;
+    esac
+fi
+
+
+# Entering next process.
+# ----------------------
+
+# Check if the target branch does exist.
+if ! branch_exists "$source_branch" false; then
+    let process_number++
+
+    echo -e "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$(printf "$TEXT_SOURCE_BRANCH_DOES_NOT_EXIST" "$source_branch")")"
+    echo
+    exit
+fi
+
+
+# Branch exists strategy.
+if branch_exists "$target_branch"; then
+
+
+    # Entering next process.
+    # ----------------------
+    let process_number++
+
+    echo -e "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$(printf "$TEXT_TARGET_BRANCH_DOES_EXIST" "$target_branch")")"
+    echo
+
+    # Checkout the target branch.
+    git checkout "$target_branch" && echo
+
+
+# Branch does not exist strategy.
+else
+
+
+    # Entering next process.
+    # ----------------------
+    let process_number++
+
+    echo -e "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$(printf "$TEXT_SOURCE_BRANCH_CHECKOUT" "$source_branch")")"
+    echo
+
+    # Checkout the source branch.
+    git checkout "$source_branch" && echo
+
+
+    # Entering next process.
+    # ----------------------
+    let process_number++
+
+    echo -e "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$(printf "$TEXT_TARGET_BRANCH_CREATE" "$target_branch")")"
+    echo
+
+    # Create the new branch.
+    git checkout -b "$target_branch" && echo
+
+fi
+
+
+# Entering next process.
+# ----------------------
+let process_number++
+
+echo -e "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$(printf "$TEXT_BRANCHES_LIST")")"
+echo
+
+# Show all currently available branches.
+git branch && echo
