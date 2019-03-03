@@ -2,6 +2,14 @@
 
 A framework for managing feature branches of git repositories.
 
+## Create a new feature branch
+
+TODO..
+
+## Merge a feature branch into the master branch (or another main branch)
+
+TODO..
+
 ## A. Authors
 
 * **Björn Hempel** - *Initial work* - [Björn Hempel](https://github.com/bjoern-hempel)
