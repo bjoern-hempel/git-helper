@@ -29,6 +29,7 @@ e) Then you are done."
 TEXT_SOURCE_BRANCH_TITLE="You want to merge the source branch \"%s\". Is that correct?"
 TEXT_SOURCE_BRANCH_QUESTION="Answer:"
 TEXT_SOURCE_BRANCH_DOES_NOT_EXIST="The given source branch \"%s\" does not exist."
+TEXT_SOURCE_BRANCH_EXISTS="The given source branch \"%s\" exists."
 TEXT_SOURCE_BRANCH_CHECKOUT="Checkout the source branch \"%s\"."
 TEXT_SOURCE_BRANCH_PULL="Pull the source branch \"%s\"."
 TEXT_SOURCE_BRANCH_MERGE="Merge the source branch \"%s\" into the target branch \"%s\"."
@@ -37,7 +38,9 @@ TEXT_SUMMARIZE_QUESTION="Answer:"
 TEXT_CANCEL_NO="You chose no. Abort here."
 TEXT_CANCEL="Cancel.."
 TEXT_DEBUG_MODE="I'm in debug mode. Ignore command:\n\033[34m$ %s\033[0m"
-
+TEXT_GIT_WORKING_STATE_NOT_CLEAN="There are processed files in the current directory. It is better if the working \
+state is clean to continue. Do you want to continue?"
+TEXT_GIT_WORKING_STATE_CLEAN="The working state is clean."
 
 # Include some helper.
 source "$ROOT_DIR/helper/functions"
@@ -56,13 +59,34 @@ debug_mode=false
 # Get the source branch.
 source_branch="$feature_branch_prefix$1"
 
-# Check if the given branch even exists.
-output=$(git show-branch remotes/origin/$source_branch 2>/dev/null)
-last_status=$?
 
-# We've established that the branch doesn't exist.
-if [[ ${last_status} -gt 0 ]]; then
-    echo "$(printf "$TEXT_SOURCE_BRANCH_DOES_NOT_EXIST" "$source_branch")" && exit 1
+# Entering next process.
+# ----------------------
+
+# Check, if we do have a clean working state.
+if changed_files; then
+    let process_number++
+
+    answer=$(select_input YES_NO "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$TEXT_GIT_WORKING_STATE_NOT_CLEAN")" "" true true) && echo && echo
+
+    # Cancel if no is selected.
+    case "$answer" in
+        no) echo "$TEXT_CANCEL_NO" && exit 1;;
+        ESCAPE) echo "$TEXT_CANCEL" && exit 1;;
+    esac
+fi
+
+
+# Entering next process.
+# ----------------------
+
+# Check if the given branch even exists.
+if ! branch_exists "$source_branch"; then
+    let process_number++
+
+    echo -e "$(printf "$format_process_number" ${process_number})$(printf "$format_process_extra$(printf "$TEXT_SOURCE_BRANCH_DOES_NOT_EXIST" "$source_branch")")"
+    echo
+    exit
 fi
 
 

@@ -89,3 +89,29 @@ execute_command() {
 
     eval "${command}"
 }
+
+# Checks if there are edited files in the current directory.
+#
+# Usage:
+# ------
+# if changed_files; then
+#     echo 'changed'
+# else
+#     echo 'not changed'
+# fi
+changed_files() {
+    [[ $(git ls-files -m | wc -l) -eq 0 ]] && return 1 || return 0
+}
+
+#
+#
+# Usage:
+branch_exists() {
+    branch="$1"
+
+    output=$(git show-branch remotes/origin/$branch 2>/dev/null)
+    last_status=$?
+
+    # We've established that the branch doesn't exist.
+    [[ ${last_status} -gt 0 ]] && return 1 || return 0
+}
